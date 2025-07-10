@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Block Blast Solver</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 40px auto;
+      max-width: 1200px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #ffffff;
+      padding: 0 20px;
+      user-select: none;
+      text-align: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin-bottom: 30px;
+      font-weight: 700;
+      color: #ffffff;
+      font-size: 2.5em;
+      text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    .upload-container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 40px;
+      margin-bottom: 40px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+
+    input[type="file"] {
+      display: block;
+      margin: 0 auto 20px auto;
+      cursor: pointer;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 12px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    input[type="file"]:hover {
+      border-color: rgba(255, 255, 255, 0.6);
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    input[type="file"]::file-selector-button {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      margin-right: 10px;
+      transition: all 0.3s ease;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    button {
+      display: block;
+      margin: 0 auto;
+      background: linear-gradient(45deg, #ff6b6b, #ee5a6f);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 25px;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(238, 90, 111, 0.4);
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 35px rgba(238, 90, 111, 0.6);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    #result {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.5s ease;
+    }
+
+    #result.show {
+      opacity: 1;
+      transform: translateY(0);
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      backdrop-filter: blur(15px);
+      color: #333;
+    }
+
+    .section {
+      margin-bottom: 40px;
+      width: 100%;
+    }
+
+    .section-content {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .blocks-container {
+      display: flex;
+      gap: 30px;
+      justify-content: center;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .placements-container {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .block-item, .placement-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 10px;
+      min-width: 120px;
+    }
+
+    .grid {
+      display: inline-block;
+      border: 3px solid #4a5568;
+      border-radius: 12px;
+      line-height: 0;
+      user-select: none;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      background: rgba(255, 255, 255, 0.1);
+      margin: 10px;
+    }
+
+    .row {
+      display: flex;
+    }
+
+    .cell {
+      width: 28px;
+      height: 28px;
+      border: 1px solid rgba(74, 85, 104, 0.3);
+      box-sizing: border-box;
+      margin: 1px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cell.filled-original {
+      background: linear-gradient(45deg, #4299e1, #3182ce);
+      box-shadow: inset 0 0 10px rgba(49, 130, 206, 0.5);
+    }
+
+    .cell.filled-placed {
+      background: linear-gradient(45deg, #f56565, #e53e3e);
+      box-shadow: inset 0 0 10px rgba(229, 62, 62, 0.5);
+      opacity: 0;
+      transform: scale(0.5);
+      animation: cellFadeIn 0.4s ease forwards;
+    }
+
+    .cell.filled-cleared {
+      background: linear-gradient(45deg, #68d391, #48bb78);
+      box-shadow: inset 0 0 10px rgba(72, 187, 120, 0.5);
+      opacity: 0;
+      transform: scale(0.5);
+      animation: cellClearOut 0.6s ease forwards;
+    }
+
+    .cell.empty {
+      background: rgba(203, 213, 224, 0.3);
+    }
+
+    @keyframes cellFadeIn {
+      0% {
+        opacity: 0;
+        transform: scale(0.5);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.1);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes cellClearOut {
+      0% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 1;
+        transform: scale(1.2);
+        background: linear-gradient(45deg, #ffd700, #ffed4e);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+        background: rgba(203, 213, 224, 0.3);
+      }
+    }
+
+    .step-text {
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #2d3748;
+    }
+
+    h2 {
+      color: #2d3748;
+      margin-bottom: 20px;
+      font-size: 1.8em;
+    }
+
+    h3 {
+      color: #4a5568;
+      margin-bottom: 15px;
+    }
+
+    .loading {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    .loading::after {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .placement-item {
+      opacity: 0;
+      transform: translateX(-30px);
+      transition: all 0.5s ease;
+    }
+
+    .placement-item.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .initial-grid-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .final-grid-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        margin: 20px 10px;
+        max-width: 100%;
+      }
+      
+      .cell {
+        width: 22px;
+        height: 22px;
+        margin: 0.5px;
+      }
+      
+      button {
+        width: 100%;
+      }
+      
+      .section-content {
+        flex-direction: column;
+        gap: 15px;
+      }
+      
+      .blocks-container, .placements-container {
+        gap: 15px;
+      }
+      
+      .block-item, .placement-item {
+        min-width: 100px;
+        margin: 5px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .cell {
+        width: 18px;
+        height: 18px;
+        margin: 0.5px;
+      }
+      
+      h1 {
+        font-size: 2em;
+      }
+      
+      .grid {
+        margin: 5px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>🎮 Block Blast Solver</h1>
+
+  <div class="upload-container">
+    <input type="file" id="fileInput" accept="image/*" />
+    <button onclick="upload()">Solve Puzzle</button>
+  </div>
+
+  <div id="result"></div>
+
+  <script>
+    let animationDelay = 0;
+
+    // Helper function to clear completed lines (matching the Python logic)
+    function clearCompletedLines(grid) {
+      const newGrid = grid.map(row => [...row]);
+      let linesCleared = 0;
+      const clearedPositions = new Set();
+
+      // Check for completed rows
+      const rowsToClear = [];
+      for (let i = 0; i < newGrid.length; i++) {
+        if (newGrid[i].every(cell => cell === 1)) {
+          rowsToClear.push(i);
+        }
+      }
+
+      // Clear completed rows
+      for (const rowIdx of rowsToClear) {
+        for (let j = 0; j < newGrid[rowIdx].length; j++) {
+          clearedPositions.add(rowIdx + ',' + j);
+          newGrid[rowIdx][j] = 0;
+        }
+        linesCleared++;
+      }
+
+      // Check for completed columns
+      const colsToClear = [];
+      for (let j = 0; j < newGrid[0].length; j++) {
+        if (newGrid.every(row => row[j] === 1)) {
+          colsToClear.push(j);
+        }
+      }
+
+      // Clear completed columns
+      for (const colIdx of colsToClear) {
+        for (let i = 0; i < newGrid.length; i++) {
+          clearedPositions.add(i + ',' + colIdx);
+          newGrid[i][colIdx] = 0;
+        }
+        linesCleared++;
+      }
+
+      return { newGrid, linesCleared, clearedPositions };
+    }
+
+    // Helper function to place a block on the grid
+    function placeBlock(grid, blockShape, startRow, startCol) {
+      const newGrid = grid.map(row => [...row]);
+      const placedCells = new Set();
+      
+      for (let r = 0; r < blockShape.length; r++) {
+        for (let c = 0; c < blockShape[r].length; c++) {
+          if (blockShape[r][c] === 1) {
+            const gridRow = startRow + r;
+            const gridCol = startCol + c;
+            if (gridRow < newGrid.length && gridCol < newGrid[0].length) {
+              newGrid[gridRow][gridCol] = 1;
+              placedCells.add(gridRow + ',' + gridCol);
+            }
+          }
+        }
+      }
+      
+      return { newGrid, placedCells };
+    }
+
+    function renderGridWithPlaced(grid, placedCells = new Set(), originalGrid = null, animateNew = false, clearedCells = new Set()) {
+      const container = document.createElement('div');
+      container.className = 'grid';
+      
+      for (let r = 0; r < grid.length; r++) {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'row';
+        for (let c = 0; c < grid[r].length; c++) {
+          const cellDiv = document.createElement('div');
+          cellDiv.className = 'cell';
+          const posKey = r + ',' + c;
+          
+          if (clearedCells.has(posKey)) {
+            // For cleared cells, show them as filled initially, then animate to empty
+            cellDiv.classList.add('filled-cleared');
+            if (animateNew) {
+              cellDiv.style.animationDelay = `${animationDelay}ms`;
+              animationDelay += 30;
+            }
+          } else if (placedCells.has(posKey)) {
+            cellDiv.classList.add('filled-placed');
+            if (animateNew) {
+              cellDiv.style.animationDelay = `${animationDelay}ms`;
+              animationDelay += 50;
+            }
+          } else if (originalGrid && originalGrid[r][c] === 1) {
+            cellDiv.classList.add('filled-original');
+          } else if (grid[r][c] === 1) {
+            cellDiv.classList.add('filled-original');
+          } else {
+            cellDiv.classList.add('empty');
+          }
+          rowDiv.appendChild(cellDiv);
+        }
+        container.appendChild(rowDiv);
+      }
+      return container;
+    }
+
+    function renderBlock(block) {
+      const container = document.createElement('div');
+      container.className = 'grid';
+      for (const row of block) {
+        const rowDiv = document.createElement('div');
+        rowDiv.className = 'row';
+        for (const cell of row) {
+          const cellDiv = document.createElement('div');
+          cellDiv.className = 'cell';
+          if (cell === 1) {
+            cellDiv.classList.add('filled-original');
+          } else {
+            cellDiv.classList.add('empty');
+          }
+          rowDiv.appendChild(cellDiv);
+        }
+        container.appendChild(rowDiv);
+      }
+      return container;
+    }
+
+    async function upload() {
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      const resultDiv = document.getElementById('result');
+      const uploadButton = document.querySelector('button');
+      
+      if (!file) {
+        alert('Please select an image first.');
+        return;
+      }
+
+      uploadButton.innerHTML = 'Solving<span class="loading"></span>';
+      uploadButton.disabled = true;
+
+      const formData = new FormData();
+      formData.append('screenshot', file);
+
+      try {
+        const response = await fetch('http://localhost:5050/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          resultDiv.innerHTML = '';
+          resultDiv.classList.add('show');
+
+          // Initial Grid Section
+          const initSection = document.createElement('div');
+          initSection.className = 'section';
+          initSection.innerHTML = '<h2>📋 Initial Grid</h2>';
+          const initContainer = document.createElement('div');
+          initContainer.className = 'initial-grid-container';
+          initContainer.appendChild(renderGridWithPlaced(data.initial_grid, new Set(), data.initial_grid));
+          initSection.appendChild(initContainer);
+          resultDiv.appendChild(initSection);
+
+          // Available Blocks Section
+          const blocksSection = document.createElement('div');
+          blocksSection.className = 'section';
+          blocksSection.innerHTML = '<h2>🧩 Available Blocks</h2>';
+
+          const blocksContainer = document.createElement('div');
+          blocksContainer.className = 'blocks-container';
+
+          data.blocks.forEach((block, i) => {
+            const bDiv = document.createElement('div');
+            bDiv.className = 'block-item';
+            bDiv.innerHTML = `<h3>Block ${i + 1}</h3>`;
+            bDiv.appendChild(renderBlock(block));
+            blocksContainer.appendChild(bDiv);
+          });
+          blocksSection.appendChild(blocksContainer);
+          resultDiv.appendChild(blocksSection);
+
+          // Solution Steps Section
+          const placementsSection = document.createElement('div');
+          placementsSection.className = 'section';
+          placementsSection.innerHTML = '<h2>🎯 Step-by-Step Solution</h2>';
+          const placementsContainer = document.createElement('div');
+          placementsContainer.className = 'placements-container';
+          placementsSection.appendChild(placementsContainer);
+          placementsSection.style.display = 'none';
+          resultDiv.appendChild(placementsSection);
+
+          // Final Result Section
+          const finalSection = document.createElement('div');
+          finalSection.className = 'section';
+          finalSection.innerHTML = '<h2>🏆 Final Result</h2>';
+          const finalContainer = document.createElement('div');
+          finalContainer.className = 'final-grid-container';
+          finalSection.appendChild(finalContainer);
+          finalSection.style.display = 'none';
+          resultDiv.appendChild(finalSection);
+
+          // Animation Button
+          const showBtn = document.createElement('button');
+          showBtn.textContent = '▶️ Show Solution Animation';
+          showBtn.style.marginBottom = '30px';
+          showBtn.style.display = 'block';
+          showBtn.style.marginLeft = 'auto';
+          showBtn.style.marginRight = 'auto';
+          resultDiv.insertBefore(showBtn, placementsSection);
+
+          let currentGrid = JSON.parse(JSON.stringify(data.initial_grid));
+
+          showBtn.addEventListener('click', async () => {
+            showBtn.disabled = true;
+            showBtn.textContent = '🎬 Playing Animation...';
+            placementsSection.style.display = 'block';
+            animationDelay = 0;
+
+            // Process each step and accumulate total animation time
+            for (let step = 0; step < data.solution.length; step++) {
+              const [blockIndex, [row, col]] = data.solution[step];
+              const block = data.blocks[blockIndex];
+
+              console.log(`Step ${step + 1}: Current grid before placement:`, currentGrid);
+
+              // Place the block
+              const { newGrid: placedGrid, placedCells } = placeBlock(currentGrid, block, row, col);
+              
+              console.log(`Step ${step + 1}: Grid after placement:`, placedGrid);
+
+              // Show placement step
+              const stepDiv = document.createElement('div');
+              stepDiv.className = 'placement-item';
+              stepDiv.innerHTML = `<h3>Step ${step + 1}: Place Block ${blockIndex + 1}</h3>`;
+              stepDiv.appendChild(renderGridWithPlaced(placedGrid, placedCells, data.initial_grid, true));
+              placementsContainer.appendChild(stepDiv);
+
+              // Show the step with animation
+              setTimeout(() => {
+                stepDiv.classList.add('show');
+              }, step * 100);
+
+              // Calculate placement animation time
+              const placementTime = 800 + (placedCells.size * 50);
+
+              // Wait for placement animation to complete
+              await new Promise(resolve => setTimeout(resolve, placementTime));
+
+              // Clear completed lines
+              const { newGrid: clearedGrid, linesCleared, clearedPositions } = clearCompletedLines(placedGrid);
+              
+              console.log(`Step ${step + 1}: Lines cleared:`, linesCleared);
+              console.log(`Step ${step + 1}: Cleared positions:`, Array.from(clearedPositions));
+              console.log(`Step ${step + 1}: Grid after clearing:`, clearedGrid);
+
+              // If lines were cleared, show the clearing animation
+              if (linesCleared > 0) {
+                const clearDiv = document.createElement('div');
+                clearDiv.className = 'placement-item';
+                clearDiv.innerHTML = `<h3>🎉 Cleared ${linesCleared} line${linesCleared > 1 ? 's' : ''}!</h3>`;
+                // Show the grid BEFORE clearing (placedGrid) with cleared positions highlighted for animation
+                clearDiv.appendChild(renderGridWithPlaced(placedGrid, new Set(), data.initial_grid, true, clearedPositions));
+                placementsContainer.appendChild(clearDiv);
+
+                // Show the clearing step with animation
+                setTimeout(() => {
+                  clearDiv.classList.add('show');
+                }, (step + 1) * 100);
+
+                // Calculate clearing animation time
+                const clearingTime = 1000 + (clearedPositions.size * 30);
+
+                // Wait for clearing animation to complete
+                await new Promise(resolve => setTimeout(resolve, clearingTime));
+              }
+
+              // Update current grid for next iteration
+              currentGrid = JSON.parse(JSON.stringify(clearedGrid));
+              console.log(`Step ${step + 1}: Final current grid:`, currentGrid);
+            }
+
+            // Hide the animation button
+            showBtn.style.display = 'none';
+            
+            // Show the final result using the final currentGrid state
+            // Clear the container first to avoid duplicates
+            finalContainer.innerHTML = '';
+            finalContainer.appendChild(renderGridWithPlaced(currentGrid, new Set(), null, false));
+            finalSection.style.display = 'block';
+            finalSection.scrollIntoView({ behavior: 'smooth' });
+          });
+
+          uploadButton.innerHTML = 'Solve Puzzle';
+          uploadButton.disabled = false;
+
+        } else {
+          resultDiv.innerHTML = `<div style="color: #f56565;"><h2>❌ Error</h2><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+          resultDiv.classList.add('show');
+          uploadButton.innerHTML = 'Solve Puzzle';
+          uploadButton.disabled = false;
+        }
+      } catch (error) {
+        resultDiv.innerHTML = `<div style="color: #f56565;"><h2>⚠️ Exception</h2><pre>${error}</pre></div>`;
+        resultDiv.classList.add('show');
+        uploadButton.innerHTML = 'Solve Puzzle';
+        uploadButton.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
