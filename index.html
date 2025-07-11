@@ -381,7 +381,7 @@
   </style>
 </head>
 <body>
-  <h1>🎮 Block Blast Solver</h1>
+  <h1>🫩 This game is too hard twin 🥀</h1>
 
   <div class="upload-container">
     <input type="file" id="fileInput" accept="image/*" />
@@ -549,7 +549,7 @@
           // Initial Grid Section
           const initSection = document.createElement('div');
           initSection.className = 'section';
-          initSection.innerHTML = '<h2>📋 Initial Grid</h2>';
+          initSection.innerHTML = '<h2>💔 Just put the fries in the bag</h2>';
           const initContainer = document.createElement('div');
           initContainer.className = 'initial-grid-container';
           initContainer.appendChild(renderGridWithPlaced(data.initial_grid, new Set(), data.initial_grid));
@@ -559,7 +559,7 @@
           // Available Blocks Section
           const blocksSection = document.createElement('div');
           blocksSection.className = 'section';
-          blocksSection.innerHTML = '<h2>🧩 Available Blocks</h2>';
+          blocksSection.innerHTML = '<h2>Blocks found using Mallie vision 👩‍🦯</h2>';
 
           const blocksContainer = document.createElement('div');
           blocksContainer.className = 'blocks-container';
@@ -577,7 +577,7 @@
           // Solution Steps Section
           const placementsSection = document.createElement('div');
           placementsSection.className = 'section';
-          placementsSection.innerHTML = '<h2>🎯 Step-by-Step Solution</h2>';
+          placementsSection.innerHTML = '<h2>🤯 Press for advanced FJ and GLF calcuations 🤯</h2>';
           const placementsContainer = document.createElement('div');
           placementsContainer.className = 'placements-container';
           placementsSection.appendChild(placementsContainer);
@@ -587,7 +587,7 @@
           // Final Result Section
           const finalSection = document.createElement('div');
           finalSection.className = 'section';
-          finalSection.innerHTML = '<h2>🏆 Final Result</h2>';
+          finalSection.innerHTML = '<h2> yoooooooooooo my bad</h2>';
           const finalContainer = document.createElement('div');
           finalContainer.className = 'final-grid-container';
           finalSection.appendChild(finalContainer);
@@ -596,7 +596,7 @@
 
           // Animation Button
           const showBtn = document.createElement('button');
-          showBtn.textContent = '▶️ Show Solution Animation';
+          showBtn.textContent = 'Please touch me 😊';
           showBtn.style.marginBottom = '30px';
           showBtn.style.display = 'block';
           showBtn.style.marginLeft = 'auto';
@@ -607,7 +607,7 @@
 
           showBtn.addEventListener('click', async () => {
             showBtn.disabled = true;
-            showBtn.textContent = '🎬 Playing Animation...';
+            showBtn.textContent = '😩 Thank you!';
             placementsSection.style.display = 'block';
             animationDelay = 0;
 
@@ -652,7 +652,7 @@
               if (linesCleared > 0) {
                 const clearDiv = document.createElement('div');
                 clearDiv.className = 'placement-item';
-                clearDiv.innerHTML = `<h3>🎉 Cleared ${linesCleared} line${linesCleared > 1 ? 's' : ''}!</h3>`;
+                clearDiv.innerHTML = `<h3>👃 Cleared ${linesCleared} line${linesCleared > 1 ? 's' : ''}!</h3>`;
                 // Show the grid BEFORE clearing (placedGrid) with cleared positions highlighted for animation
                 clearDiv.appendChild(renderGridWithPlaced(placedGrid, new Set(), data.initial_grid, true, clearedPositions));
                 placementsContainer.appendChild(clearDiv);
